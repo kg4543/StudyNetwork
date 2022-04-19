@@ -39,28 +39,53 @@ namespace Lock
         }
     }
 
+    class Lock
+    {
+        // 커널단에서 조작 (시스템 부하가 큼)
+        //Auto는 수동으로 문을 닫아서 Reset이 필요없다
+        AutoResetEvent _available = new AutoResetEvent(true); //true : 아무나 들어올 수 있음
+        //ManualResetEvent _available = new ManualResetEvent(true);
+
+        public void Acquire()
+        {
+            _available.WaitOne(); // 입장 시도 flag = false
+            //_available.Reset();
+        }
+
+        public void Release()
+        {
+            _available.Set(); //flag = true
+        }
+    }
+
     class Program
     {
         static int num = 0;
-        static SpinLock spinLock = new SpinLock();
+        //static SpinLock locked = new SpinLock();
+        static Lock _lock = new Lock(); 
+        //static Mutex _lock = new Mutex();
 
         static void Thread1()
         {
-            for (int i = 0; i < 100000; i++)
+            for (int i = 0; i < 10000; i++)
             {
-                spinLock.Acquire();
+                _lock.Acquire();
+                //_lock.WaitOne();
                 num++;
-                spinLock.Release();
+                _lock.Release();
+                //_lock.ReleaseMutex();
             }
         }
 
         static void Thread2()
         {
-            for (int i = 0; i < 100000; i++)
+            for (int i = 0; i < 10000; i++)
             {
-                spinLock.Acquire();
+                _lock.Acquire();
+                //_lock.WaitOne();
                 num--;
-                spinLock.Release();
+                _lock.Release();
+                //_lock.ReleaseMutex();
             }
         }
 
